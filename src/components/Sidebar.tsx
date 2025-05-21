@@ -16,7 +16,7 @@ const Sidebar = () => {
                         >
                             {participant.icon ? (
                                 <img
-                                    src={participant.icon}
+                                    src={`/teleparty_messenger/static/media/${participant.icon}`}
                                     alt="Avatar"
                                     className="w-10 h-10 rounded-full bg-[#006A71] flex items-center justify-center mb-1"
                                 />

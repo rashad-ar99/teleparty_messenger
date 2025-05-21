@@ -56,8 +56,7 @@ const Room = ({
                             message.id === user.id || message.userNickname === user.nickname;
                         const nickname = fromMe
                             ? user.nickname
-                            : message.userNickname || message.id || "Unknown";
-                        const userId = message.id || "unknown";
+                            : message.userNickname || message.id;
 
                         return message.isSystemMessage ? (
                             <div
@@ -78,7 +77,7 @@ const Room = ({
                             >
                                 {message.userIcon ? (
                                     <img
-                                        src={message.userIcon}
+                                        src={`/teleparty_messenger/static/media/${message.userIcon}`}
                                         alt={`${nickname}'s avatar`}
                                         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                     />

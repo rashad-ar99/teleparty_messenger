@@ -79,7 +79,6 @@ export const Provider = ({
             },
             onMessage: (message: SocketMessage) => {
                 if (room) {
-                    console.log("message", message);
                     switch (message.type) {
                         case "userId":
                             setUser((prevUser) => ({

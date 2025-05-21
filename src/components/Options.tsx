@@ -128,15 +128,29 @@ const Options = ({
                                                     name="profileImage"
                                                     className="sr-only"
                                                     checked={selectedImage === avatar.src}
-                                                    onChange={() => handleImageSelect(avatar.src)}
+                                                    onChange={() =>
+                                                        handleImageSelect(
+                                                            avatar.src.replace(
+                                                                "/teleparty_messenger/static/media/",
+                                                                ""
+                                                            )
+                                                        )
+                                                    }
                                                 />
                                                 <img
                                                     src={avatar.src}
                                                     alt={avatar.alt}
                                                     className="h-16 w-16 object-cover rounded-full border border-gray-300"
-                                                    onClick={() => handleImageSelect(avatar.src)}
+                                                    onClick={() =>
+                                                        handleImageSelect(
+                                                            avatar.src.replace(
+                                                                "/teleparty_messenger/static/media/",
+                                                                ""
+                                                            )
+                                                        )
+                                                    }
                                                 />
-                                                {selectedImage === avatar.src && (
+                                                {avatar.src?.includes(selectedImage) && (
                                                     <div className="absolute -top-1 -right-1 bg-[#48A6A7] rounded-full w-5 h-5 flex items-center justify-center">
                                                         <span className="text-white text-xs">
                                                             ✓
