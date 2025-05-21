@@ -53,37 +53,32 @@ const Room = ({
                 {room?.messages &&
                     room.messages.map((message, index) => {
                         const fromMe =
-                            message.userSettings?.id === user.id ||
-                            message.userSettings?.userNickname === user.nickname;
+                            message.id === user.id || message.userNickname === user.nickname;
                         const nickname = fromMe
                             ? user.nickname
-                            : message.userSettings?.userNickname ||
-                              message.userSettings?.id ||
-                              "Unknown";
-                        const userId = message.userSettings?.id || "unknown";
+                            : message.userNickname || message.id || "Unknown";
+                        const userId = message.id || "unknown";
 
                         return message.isSystemMessage ? (
                             <div
-                                key={message.messageId}
+                                key={index}
                                 ref={index === room?.messages?.length - 1 ? lastMessageRef : null}
                                 className="text-xs text-gray-500 text-center"
                             >
-                                {message.userSettings?.userNickname
-                                    ? message.userSettings?.userNickname
-                                    : message.userSettings?.id}{" "}
+                                {message.userNickname ? message.userNickname : message.id}{" "}
                                 {message.body}
                             </div>
                         ) : (
                             <div
                                 ref={index === room?.messages?.length - 1 ? lastMessageRef : null}
-                                key={message.messageId}
+                                key={index}
                                 className={`flex ${
                                     fromMe ? "flex-row-reverse" : "flex-row"
                                 } items-start gap-2`}
                             >
-                                {message.userSettings?.userIcon ? (
+                                {message.userIcon ? (
                                     <img
-                                        src={message.userSettings.userIcon}
+                                        src={message.userIcon}
                                         alt={`${nickname}'s avatar`}
                                         className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                     />
