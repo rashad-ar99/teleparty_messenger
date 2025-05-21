@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import useLocalStorage from "../hooks/useLocalStorage.tsx";
-import { TelepartyClient, SocketEventHandler, SocketMessageTypes } from "teleparty-websocket-lib";
+import {
+    TelepartyClient,
+    SocketEventHandler,
+    SocketMessageTypes,
+    SessionChatMessage,
+    MessageList,
+} from "teleparty-websocket-lib";
 import { SocketMessage } from "teleparty-websocket-lib/lib/SocketMessage";
 
 export type Participant = {
@@ -100,13 +106,11 @@ export const Provider = ({
                             }));
                             break;
                         case SocketMessageTypes.SEND_MESSAGE:
-                            const newMessage = {
+                            const newMessage: SessionChatMessage = {
                                 body: message.data.body,
                                 isSystemMessage: message.data.isSystemMessage,
                                 timestamp: message.data.timestamp,
                                 permId: message.data.permId,
-                                messageId: message.data.messageId,
-                                userSettings: message.data.userSettings,
                                 userIcon: message.data.userIcon,
                                 userNickname: message.data.userNickname,
                             };
@@ -137,12 +141,12 @@ export const Provider = ({
         if (!isConnected)
             throw new Error("Please connect to the server first. Try refreshing the page.");
 
-        const { messages } = await client.joinChatRoom(nickname, roomId, userIcon);
+        const data: MessageList = await client.joinChatRoom(nickname, roomId, userIcon);
 
         setRoom((prevRoom) => ({
             ...prevRoom,
             id: roomId,
-            messages,
+            messages: data.messages,
         }));
         setUser((prevUser) => ({
             ...prevUser,
