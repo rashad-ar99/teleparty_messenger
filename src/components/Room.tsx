@@ -120,9 +120,9 @@ const Room = ({
                     typing.anyoneTyping && <div className="text-xs text-gray-500">Typing...</div>}
             </div>
             <form onSubmit={handleSubmit}>
-                <div className="flex gap-5 p-1">
+                <div className="flex gap-5 justify-center">
                     <input
-                        className="flex-grow p-3 h-15 rounded-md focus:outline-none shadow-lg"
+                        className="flex-grow p-3 h-10 md:h-15 rounded-md focus:outline-none shadow-lg"
                         type="textarea"
                         value={message}
                         onKeyDown={(e) => {
@@ -142,7 +142,9 @@ const Room = ({
                         }}
                         placeholder="Type your message here..."
                     />
-                    <button className="h-14 p-3 rounded-full bg-[#006A71] text-white">send</button>
+                    <button className="hidden md:block h-14 p-3 rounded-full bg-[#006A71] text-white">
+                        send
+                    </button>
                 </div>
             </form>
         </div>

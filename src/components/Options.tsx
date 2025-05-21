@@ -54,7 +54,7 @@ const Options = ({
     return (
         <div className="flex flex-col justify-center items-center h-full">
             <div>
-                <div className="bg-[#F2EFE7] rounded-lg shadow-md w-96 max-w-full">
+                <div className="bg-[#F2EFE7] rounded-lg shadow-md md:w-96 max-w-full">
                     <div className="flex border-b">
                         <button
                             className={`py-2 px-4 w-1/2 font-medium ${

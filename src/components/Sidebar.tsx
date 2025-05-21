@@ -5,7 +5,7 @@ const Sidebar = () => {
     const { room } = useStore();
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="hidden md:flex flex-col gap-3">
             <div className="text-center text-sm">Participants</div>
             <div className="flex flex-col flex-grow justify-between bg-[#48A6A7] border-t-4 border-[#006A71] rounded-lg">
                 <div className="flex flex-col">

@@ -20,7 +20,7 @@ export const Dashboard = ({
                 <>
                     <div className="grid grid-cols-4 gap-3">
                         <Sidebar />
-                        <div className="col-span-3 hidden md:block px-5 py-2 border-y-2 border-x-8 rounded-lg border-[#006A71]/30">
+                        <div className="col-span-4 md:col-span-3 px-5 py-2 border-y-2 border-x-8 rounded-lg border-[#006A71]/30">
                             <Room setIsOptionSelected={setIsOptionSelected} />
                         </div>
                     </div>
