@@ -298,6 +298,7 @@ export const Provider = ({
 
         // Close the connection
         if (client) client.teardown();
+        window.location.reload();
 
         setIsOptionSelected(false);
     };
