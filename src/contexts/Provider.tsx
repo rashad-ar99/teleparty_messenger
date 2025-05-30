@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import useLocalStorage from "../hooks/useLocalStorage.tsx";
 import {
     TelepartyClient,
@@ -8,6 +8,7 @@ import {
     MessageList,
 } from "teleparty-websocket-lib";
 import { SocketMessage } from "teleparty-websocket-lib/lib/SocketMessage";
+import { ERRORS } from "../constants.tsx";
 
 export type Participant = {
     id: string;
@@ -44,103 +45,184 @@ export const Provider = ({
 
     const [client, setClient] = useState<TelepartyClient | null>(null);
     const [typing, setIsTyping] = useState<boolean>(false);
-    const [isConnected, setIsConnected] = useState<boolean>(false);
+    const isConnectedRef = useRef(false);
+
+    const [isExiting, setIsExiting] = useLocalStorage<boolean>("is-exiting", false);
+    const isExitingRef = useRef(isExiting);
 
     useEffect(() => {
-        const eventHandler: SocketEventHandler = {
-            onConnectionReady: () => {
-                console.log("Connection has been established");
-                setIsConnected(true);
-                setRoom({
-                    id: "",
-                    participants: [],
-                    messages: [],
-                });
-                setUser({
-                    id: user.id,
-                    nickname: "",
-                    icon: "",
-                });
-            },
-            onClose: () => {
-                console.log("Socket has been closed");
-                setIsConnected(false);
-                setIsOptionSelected(false);
-                setRoom({
-                    id: "",
-                    participants: [],
-                    messages: [],
-                });
-                setUser({
-                    id: user.id,
-                    nickname: "",
-                    icon: "",
-                });
-            },
-            onMessage: (message: SocketMessage) => {
-                if (room) {
-                    switch (message.type) {
-                        case "userId":
-                            setUser((prevUser) => ({
-                                ...prevUser,
-                                id: message.data.userId,
-                                ...(Boolean(message.data.nickname) && {
-                                    nickname: message.data.nickname,
-                                }),
-                                ...(Boolean(message.data.icon) && {
-                                    icon: message.data.icon,
-                                }),
-                            }));
-                            break;
-                        case "userList":
-                            setRoom((prevRoom) => ({
-                                ...prevRoom,
-                                participants: [
-                                    ...message.data.map((user) => ({
-                                        id: user.userSettings.id,
-                                        nickname: user.userSettings.userNickname,
-                                        icon: user.userSettings.userIcon,
-                                    })),
-                                ],
-                            }));
-                            break;
-                        case SocketMessageTypes.SEND_MESSAGE:
-                            const newMessage: SessionChatMessage = {
-                                body: message.data.body,
-                                isSystemMessage: message.data.isSystemMessage,
-                                timestamp: message.data.timestamp,
-                                permId: message.data.permId,
-                                userIcon: message.data.userIcon,
-                                userNickname: message.data.userNickname,
-                            };
+        console.log("Room state changed:", room);
+    }, [room]);
 
-                            setRoom((prevRoom) => {
-                                return {
-                                    ...prevRoom,
-                                    messages: [...prevRoom.messages, newMessage],
-                                };
-                            });
-                            break;
-                        case SocketMessageTypes.SET_TYPING_PRESENCE:
-                            setIsTyping(message.data);
-                            break;
+    useEffect(() => {
+        console.log("User state changed:", user);
+    }, [user]);
+
+    useEffect(() => {
+        let newClient: TelepartyClient | null = null;
+        const eventHandler: SocketEventHandler = {
+            onConnectionReady: async () => {
+                try {
+                    console.log("Connection has been established");
+                    isConnectedRef.current = true;
+
+                    isExitingRef.current = false;
+                    setIsExiting(false);
+                    setClient(newClient);
+
+                    if (newClient && !isExitingRef.current && room.id && user.nickname) {
+                        setUser((prevUser) => ({
+                            id: "",
+                            nickname: "",
+                            icon: "",
+                        }));
+
+                        setRoom((prevRoom) => ({
+                            id: "",
+                            participants: [],
+                            messages: [],
+                        }));
+
+                        await joinRoom(user.nickname, room.id, user.icon, newClient);
                     }
+                } catch (error) {
+                    console.error("Failed to join room:", error);
+                }
+                isExitingRef.current = false;
+            },
+            onClose: async () => {
+                try {
+                    console.log("Socket has been closed");
+                    console.log("isExitingRef.current:", isExitingRef.current);
+                    isConnectedRef.current = false;
+
+                    client?.teardown();
+                    // createConnection();
+
+                    if (isExitingRef.current) {
+                        console.log("Intentional exit - clearing room and user data");
+                        setIsOptionSelected(false);
+
+                        setUser({
+                            id: "",
+                            nickname: "",
+                            icon: "",
+                        });
+                        setRoom({
+                            id: "",
+                            participants: [],
+                            messages: [],
+                        });
+                    }
+                } catch (error) {
+                    console.error("Failed to close socket:", error);
+                }
+            },
+            onMessage: async (message: SocketMessage) => {
+                switch (message.type) {
+                    case "userId":
+                        setUser((prevUser) => ({
+                            ...prevUser,
+                            id: message.data.userId,
+                            ...(Boolean(message.data.nickname) && {
+                                nickname: message.data.nickname,
+                            }),
+                            ...(Boolean(message.data.icon) && {
+                                icon: message.data.icon,
+                            }),
+                        }));
+
+                        break;
+                    case "userList":
+                        setRoom((prevRoom) => ({
+                            ...prevRoom,
+                            participants: [
+                                ...message.data.map((user) => ({
+                                    id: user.userSettings.id,
+                                    nickname: user.userSettings.userNickname,
+                                    icon: user.userSettings.userIcon,
+                                })),
+                            ],
+                        }));
+                        break;
+                    case SocketMessageTypes.SEND_MESSAGE:
+                        const newMessage: SessionChatMessage = {
+                            body: message.data.body,
+                            isSystemMessage: message.data.isSystemMessage,
+                            timestamp: message.data.timestamp,
+                            permId: message.data.permId,
+                            userIcon: message.data.userIcon,
+                            userNickname: message.data.userNickname,
+                        };
+
+                        setRoom((prevRoom) => {
+                            return {
+                                ...prevRoom,
+                                messages: [...prevRoom.messages, newMessage],
+                            };
+                        });
+                        break;
+                    case SocketMessageTypes.SET_TYPING_PRESENCE:
+                        setIsTyping(message.data);
+                        break;
                 }
             },
         };
 
-        const newClient = new TelepartyClient(eventHandler);
+        newClient = new TelepartyClient(eventHandler);
         setClient(newClient);
 
         return () => {
-            if (client) client.teardown();
+            if (newClient) newClient.teardown();
         };
     }, []);
-    const joinRoom = async (nickname: string, roomId: string, userIcon: string) => {
-        if (!isConnected)
-            throw new Error("Please connect to the server first. Try refreshing the page.");
 
-        const data: MessageList = await client.joinChatRoom(nickname, roomId, userIcon);
+    // const rejoinRoom = async () => {
+    //     try {
+    //         if (!client) {
+    //             console.log("Client not ready, waiting...");
+    //             return;
+    //         }
+
+    //         if (room.id && user.nickname) {
+    //             console.log("Rejoining room:", room.id);
+    //             const data: MessageList = await client.joinChatRoom(
+    //                 user.nickname,
+    //                 room.id,
+    //                 user.icon
+    //             );
+
+    //             setRoom((prevRoom) => ({
+    //                 ...prevRoom,
+    //                 messages: data.messages,
+    //             }));
+
+    //             setIsOptionSelected(true);
+    //             console.log("Successfully rejoined room");
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to rejoin room:", error);
+    //     }
+    // };
+
+    // useEffect(() => {
+    //     if (client && isConnected && room.id && user.nickname && !isExitingRef.current) {
+    //         rejoinRoom();
+    //     }
+    // }, [isConnected]);
+
+    const joinRoom = async (
+        nickname: string,
+        roomId: string,
+        userIcon: string,
+        clientInstance?: TelepartyClient
+    ) => {
+        if (!isConnectedRef.current) throw new Error(ERRORS.NOT_CONNECTED);
+
+        const activeClient = clientInstance || client;
+        if (!activeClient) throw new Error("Client not available");
+
+        const data: MessageList = await activeClient.joinChatRoom(nickname, roomId, userIcon);
 
         setRoom((prevRoom) => ({
             ...prevRoom,
@@ -153,11 +235,11 @@ export const Provider = ({
             ...(Boolean(nickname) && { nickname: nickname }),
             ...(Boolean(userIcon) && { icon: userIcon }),
         }));
+        setIsOptionSelected(true);
     };
 
     const setTyping = (typing: boolean) => {
-        if (!isConnected)
-            throw new Error("Please connect to the server first. Try refreshing the page.");
+        if (!isConnectedRef.current) throw new Error(ERRORS.NOT_CONNECTED);
 
         client.sendMessage(SocketMessageTypes.SET_TYPING_PRESENCE, {
             typing: typing,
@@ -165,8 +247,7 @@ export const Provider = ({
     };
 
     const createRoom = async (nickname: string, userIcon: string) => {
-        if (!isConnected)
-            throw new Error("Please connect to the server first. Try refreshing the page.");
+        if (!isConnectedRef.current) throw new Error(ERRORS.NOT_CONNECTED);
 
         const _user = {
             id: user.id,
@@ -189,13 +270,21 @@ export const Provider = ({
         callbackId: string;
         timestamp: Date;
     }) => {
-        if (!isConnected)
-            throw new Error("Please connect to the server first. Try refreshing the page.");
+        if (!isConnectedRef.current) throw new Error(ERRORS.NOT_CONNECTED);
 
-        client.sendMessage(SocketMessageTypes.SEND_MESSAGE, { body: message.data });
+        try {
+            client.sendMessage(SocketMessageTypes.SEND_MESSAGE, { body: message.data });
+        } catch (error) {
+            console.error("Failed to send message:", error);
+        }
     };
 
     const exitRoom = () => {
+        console.log("Exiting room...");
+
+        isExitingRef.current = true;
+        setIsExiting(true);
+        // Clear room and user data
         setRoom({
             id: "",
             participants: [],
@@ -206,7 +295,11 @@ export const Provider = ({
             nickname: "",
             icon: "",
         });
-        client.teardown();
+
+        // Close the connection
+        if (client) client.teardown();
+
+        setIsOptionSelected(false);
     };
 
     return (
@@ -216,7 +309,7 @@ export const Provider = ({
                 createRoom,
                 sendMessage,
                 setTyping,
-                isConnected,
+                isConnected: isConnectedRef.current,
                 joinRoom,
                 user,
                 exitRoom,

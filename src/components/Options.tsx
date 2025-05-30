@@ -17,7 +17,7 @@ const Options = ({
         OPTION_TYPES.CREATE
     );
     const [error, setError] = useState<string | null>(null);
-    const { createRoom, joinRoom } = useStore();
+    const { createRoom, joinRoom, isConnected } = useStore();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const avatarOptions = [
@@ -164,9 +164,16 @@ const Options = ({
                             </div>
                             <button
                                 type="submit"
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#48A6A7] hover:bg-[#006A71] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9ACBD0]"
+                                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#48A6A7] hover:bg-[#006A71] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9ACBD0] ${
+                                    !isConnected ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
+                                disabled={!isConnected}
                             >
-                                {activeTab === OPTION_TYPES.CREATE ? "Create Room" : "Join Room"}
+                                {isConnected
+                                    ? activeTab === OPTION_TYPES.CREATE
+                                        ? "Create Room"
+                                        : "Join Room"
+                                    : "Connecting to server..."}
                             </button>
                         </form>
                         {error && <p className="mt-3 text-xs text-red-500">{error}</p>}

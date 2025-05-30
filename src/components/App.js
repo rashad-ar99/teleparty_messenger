@@ -4,6 +4,7 @@ import { Dashboard } from "./Dashboard.tsx";
 
 const App = () => {
     const [isOptionSelected, setIsOptionSelected] = useState(false);
+
     return (
         <Provider setIsOptionSelected={setIsOptionSelected}>
             <Dashboard

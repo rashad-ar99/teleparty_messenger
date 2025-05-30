@@ -9,7 +9,7 @@ const Sidebar = () => {
             <div className="text-center text-sm">Participants</div>
             <div className="flex flex-col flex-grow justify-between bg-[#48A6A7] border-t-4 border-[#006A71] rounded-lg">
                 <div className="flex flex-col">
-                    {room?.participants.map((participant, index) => (
+                    {room?.participants?.map((participant, index) => (
                         <div
                             className="p-2 flex flex-col border-b-2 border-[#006A71]/40 items-center"
                             key={index}

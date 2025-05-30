@@ -4,3 +4,7 @@ export const OPTION_TYPES = {
 };
 
 export const PREFIX = "chat-app-";
+
+export const ERRORS = {
+    NOT_CONNECTED: "Not connected to the server yet. Please try again",
+};
