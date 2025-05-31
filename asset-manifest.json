@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/teleparty_messenger/static/css/main.dcead136.css",
-    "main.js": "/teleparty_messenger/static/js/main.20a3b31c.js",
+    "main.css": "/teleparty_messenger/static/css/main.a9a003b3.css",
+    "main.js": "/teleparty_messenger/static/js/main.d875d5c9.js",
     "static/media/avatar_1.jpg": "/teleparty_messenger/static/media/avatar_1.9d42e3034519c5326326.jpg",
     "static/media/avatar_3.jpg": "/teleparty_messenger/static/media/avatar_3.6d3f69b4077a77ba7f97.jpg",
     "static/media/avatar_4.jpg": "/teleparty_messenger/static/media/avatar_4.e6e742323873f1831564.jpg",
@@ -9,11 +9,11 @@
     "static/media/avatar_6.jpg": "/teleparty_messenger/static/media/avatar_6.f69f86b1ebd9909ec781.jpg",
     "static/media/avatar_5.jpg": "/teleparty_messenger/static/media/avatar_5.4ba51b59ba4911f0fb5b.jpg",
     "index.html": "/teleparty_messenger/index.html",
-    "main.dcead136.css.map": "/teleparty_messenger/static/css/main.dcead136.css.map",
-    "main.20a3b31c.js.map": "/teleparty_messenger/static/js/main.20a3b31c.js.map"
+    "main.a9a003b3.css.map": "/teleparty_messenger/static/css/main.a9a003b3.css.map",
+    "main.d875d5c9.js.map": "/teleparty_messenger/static/js/main.d875d5c9.js.map"
   },
   "entrypoints": [
-    "static/css/main.dcead136.css",
-    "static/js/main.20a3b31c.js"
+    "static/css/main.a9a003b3.css",
+    "static/js/main.d875d5c9.js"
   ]
 }
