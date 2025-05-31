@@ -115,9 +115,7 @@ const Room = ({
                     })}
             </div>
             <div className="">
-                {typing?.usersTyping &&
-                    typing?.usersTyping[0] !== user.id &&
-                    typing.anyoneTyping && <div className="text-xs text-gray-500">Typing...</div>}
+                {typing && <div className="text-xs text-gray-500">Typing...</div>}
             </div>
             <form onSubmit={handleSubmit}>
                 <div className="flex gap-5 justify-center">

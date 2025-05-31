@@ -42,6 +42,7 @@ export const Provider = ({
         nickname: "",
         icon: "",
     }));
+    const userIdRef = useRef(user.id);
 
     const [client, setClient] = useState<TelepartyClient | null>(null);
     const [typing, setIsTyping] = useState<boolean>(false);
@@ -49,14 +50,6 @@ export const Provider = ({
 
     const [isExiting, setIsExiting] = useLocalStorage<boolean>("is-exiting", false);
     const isExitingRef = useRef(isExiting);
-
-    useEffect(() => {
-        console.log("Room state changed:", room);
-    }, [room]);
-
-    useEffect(() => {
-        console.log("User state changed:", user);
-    }, [user]);
 
     useEffect(() => {
         let newClient: TelepartyClient | null = null;
@@ -69,22 +62,6 @@ export const Provider = ({
                     isExitingRef.current = false;
                     setIsExiting(false);
                     setClient(newClient);
-
-                    if (newClient && !isExitingRef.current && room.id && user.nickname) {
-                        setUser((prevUser) => ({
-                            id: "",
-                            nickname: "",
-                            icon: "",
-                        }));
-
-                        setRoom((prevRoom) => ({
-                            id: "",
-                            participants: [],
-                            messages: [],
-                        }));
-
-                        await joinRoom(user.nickname, room.id, user.icon, newClient);
-                    }
                 } catch (error) {
                     console.error("Failed to join room:", error);
                 }
@@ -97,7 +74,6 @@ export const Provider = ({
                     isConnectedRef.current = false;
 
                     client?.teardown();
-                    // createConnection();
 
                     if (isExitingRef.current) {
                         console.log("Intentional exit - clearing room and user data");
@@ -108,6 +84,7 @@ export const Provider = ({
                             nickname: "",
                             icon: "",
                         });
+                        userIdRef.current = "";
                         setRoom({
                             id: "",
                             participants: [],
@@ -121,16 +98,24 @@ export const Provider = ({
             onMessage: async (message: SocketMessage) => {
                 switch (message.type) {
                     case "userId":
-                        setUser((prevUser) => ({
-                            ...prevUser,
-                            id: message.data.userId,
-                            ...(Boolean(message.data.nickname) && {
-                                nickname: message.data.nickname,
-                            }),
-                            ...(Boolean(message.data.icon) && {
-                                icon: message.data.icon,
-                            }),
-                        }));
+                        {
+                            setUser((prevUser) => ({
+                                ...prevUser,
+                                id: message.data.userId,
+                                ...(Boolean(message.data.nickname) && {
+                                    nickname: message.data.nickname,
+                                }),
+                                ...(Boolean(message.data.icon) && {
+                                    icon: message.data.icon,
+                                }),
+                            }));
+
+                            userIdRef.current = message.data.userId;
+
+                            if (newClient && !isExitingRef.current && room.id && user.nickname) {
+                                await joinRoom(user.nickname, room.id, user.icon, newClient);
+                            }
+                        }
 
                         break;
                     case "userList":
@@ -163,7 +148,15 @@ export const Provider = ({
                         });
                         break;
                     case SocketMessageTypes.SET_TYPING_PRESENCE:
-                        setIsTyping(message.data);
+                        if (
+                            message.data?.usersTyping &&
+                            message.data?.usersTyping[0] !== userIdRef.current &&
+                            message.data.anyoneTyping
+                        ) {
+                            setIsTyping(true);
+                        } else {
+                            setIsTyping(false);
+                        }
                         break;
                 }
             },
@@ -176,40 +169,6 @@ export const Provider = ({
             if (newClient) newClient.teardown();
         };
     }, []);
-
-    // const rejoinRoom = async () => {
-    //     try {
-    //         if (!client) {
-    //             console.log("Client not ready, waiting...");
-    //             return;
-    //         }
-
-    //         if (room.id && user.nickname) {
-    //             console.log("Rejoining room:", room.id);
-    //             const data: MessageList = await client.joinChatRoom(
-    //                 user.nickname,
-    //                 room.id,
-    //                 user.icon
-    //             );
-
-    //             setRoom((prevRoom) => ({
-    //                 ...prevRoom,
-    //                 messages: data.messages,
-    //             }));
-
-    //             setIsOptionSelected(true);
-    //             console.log("Successfully rejoined room");
-    //         }
-    //     } catch (error) {
-    //         console.error("Failed to rejoin room:", error);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     if (client && isConnected && room.id && user.nickname && !isExitingRef.current) {
-    //         rejoinRoom();
-    //     }
-    // }, [isConnected]);
 
     const joinRoom = async (
         nickname: string,
@@ -231,7 +190,6 @@ export const Provider = ({
         }));
         setUser((prevUser) => ({
             ...prevUser,
-            ...(Boolean(user.id) && { id: user.id }),
             ...(Boolean(nickname) && { nickname: nickname }),
             ...(Boolean(userIcon) && { icon: userIcon }),
         }));
@@ -250,10 +208,11 @@ export const Provider = ({
         if (!isConnectedRef.current) throw new Error(ERRORS.NOT_CONNECTED);
 
         const _user = {
-            id: user.id,
+            id: userIdRef.current,
             nickname: nickname,
             icon: userIcon,
         };
+
         setUser((prevUser) => ({ ...prevUser, ..._user }));
 
         const roomId = await client.createChatRoom(nickname, userIcon);
@@ -291,7 +250,7 @@ export const Provider = ({
             messages: [],
         });
         setUser({
-            id: user.id,
+            id: userIdRef.current,
             nickname: "",
             icon: "",
         });
