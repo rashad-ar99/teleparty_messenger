@@ -70,10 +70,7 @@ export const Provider = ({
             onClose: async () => {
                 try {
                     console.log("Socket has been closed");
-                    console.log("isExitingRef.current:", isExitingRef.current);
                     isConnectedRef.current = false;
-
-                    client?.teardown();
 
                     if (isExitingRef.current) {
                         console.log("Intentional exit - clearing room and user data");
@@ -90,6 +87,8 @@ export const Provider = ({
                             participants: [],
                             messages: [],
                         });
+                    } else {
+                        setIsOptionSelected(false);
                     }
                 } catch (error) {
                     console.error("Failed to close socket:", error);
@@ -166,7 +165,7 @@ export const Provider = ({
         };
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isConnectedRef.current]);
 
     const joinRoom = async (
         nickname: string,
