@@ -98,25 +98,21 @@ export const Provider = ({
             onMessage: async (message: SocketMessage) => {
                 switch (message.type) {
                     case "userId":
-                        {
-                            setUser((prevUser) => ({
-                                ...prevUser,
-                                id: message.data.userId,
-                                ...(Boolean(message.data.nickname) && {
-                                    nickname: message.data.nickname,
-                                }),
-                                ...(Boolean(message.data.icon) && {
-                                    icon: message.data.icon,
-                                }),
-                            }));
+                        setUser((prevUser) => ({
+                            ...prevUser,
+                            id: message.data.userId,
+                            ...(Boolean(message.data.nickname) && {
+                                nickname: message.data.nickname,
+                            }),
+                            ...(Boolean(message.data.icon) && {
+                                icon: message.data.icon,
+                            }),
+                        }));
 
-                            userIdRef.current = message.data.userId;
+                        userIdRef.current = message.data.userId;
 
-                            if (newClient && !isExitingRef.current && room.id && user.nickname) {
-                                await joinRoom(user.nickname, room.id, user.icon, newClient);
-                            }
-                        }
-
+                        if (newClient && !isExitingRef.current && room.id && user.nickname)
+                            await joinRoom(user.nickname, room.id, user.icon, newClient);
                         break;
                     case "userList":
                         setRoom((prevRoom) => ({
@@ -168,6 +164,8 @@ export const Provider = ({
         return () => {
             if (newClient) newClient.teardown();
         };
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const joinRoom = async (
